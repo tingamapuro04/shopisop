@@ -9,7 +9,10 @@ const dbDialect = process.env.DBDIALECT;
 // connect to a postgres database
 const sequelize = new Sequelize(db, dbUser, dbPassword, {
   host: dbHost,
-  dialect: dbDialect
+  dialect: dbDialect,
+  define: {
+    freezeTableName: true
+  },
 });
 
 export default sequelize;

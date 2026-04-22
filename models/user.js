@@ -5,9 +5,9 @@ export let User;
 export const initUserModel = (sequelize) => {
   User = sequelize.define("User", {
     id: {
-      type: DataTypes.STRING,
+      type: DataTypes.UUID,
       primaryKey: true,
-      defaultValue: () => uuidv4(),
+      defaultValue: DataTypes.UUIDV4,
     },
     email: {
       type: DataTypes.STRING,
@@ -21,8 +21,34 @@ export const initUserModel = (sequelize) => {
     password: {
       type: DataTypes.STRING,
       allowNull: false,
+      // validate if password is at least 6 characters long and contains at least one number, one uppercase letter, and one lowercase letter
+      validate: {
+        len: [5, 100],
+        isStrong(value) {
+          if (!/(?=.*[0-9])(?=.*[a-z])(?=.*[A-Z])/.test(value)) {
+            throw new Error('Password must contain at least one number, one uppercase, and one lowercase letter');
+          }
+        }
+      },
     },
-  });
+    role: {
+      type: DataTypes.STRING,
+      allowNull: false,
+      defaultValue: "user",
+      validate: {
+        isIn: [["user", "admin", "superAdmin"]],
+      },
+    },
+    profilePicture: {
+      type: DataTypes.STRING,
+      allowNull: true,
+    },
+  },
+{
+  timestamps: false,
+  tableName: "users",
+  freezeTableName: true,
+});
 
   return User;
 };
