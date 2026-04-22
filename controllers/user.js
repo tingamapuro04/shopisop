@@ -1,5 +1,7 @@
 import bcrypt from "bcryptjs";
+import jwt from "jsonwebtoken";
 import { User } from "../models/user.js";
+import { uploadFileToS3 } from "../utils/file_upload.js";
 
 export const getAllUsers = async (req, res) => {
   try {
@@ -14,10 +16,8 @@ export const getAllUsers = async (req, res) => {
 // create a new user and hash the password before saving to the database
 export const createUser = async (req, res) => {
   try {
-    const { email, password, role, profilePicture } = req.body;
-    if(!profilePicture){
-      console.log("Yes")
-    }
+    const { email, password, role } = req.body;
+    const profilePicture = req.file ? await uploadFileToS3(req.file) : null;
     const hashedPassword = await bcrypt.hash(password, 10);
     const newUser = await User.create({
       email,

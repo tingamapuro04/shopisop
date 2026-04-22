@@ -1,5 +1,4 @@
 import { DataTypes } from "sequelize";
-import { v4 as uuidv4 } from "uuid";
 
 export let User;
 export const initUserModel = (sequelize) => {
