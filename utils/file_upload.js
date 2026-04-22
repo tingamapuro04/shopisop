@@ -1,5 +1,10 @@
 // import s3 client
-import { S3Client, PutObjectCommand } from "@aws-sdk/client-s3";
+import {
+  S3Client,
+  PutObjectCommand,
+  GetObjectCommand,
+} from "@aws-sdk/client-s3";
+import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 import crypto from 'crypto';
 import sharp from "sharp";
 // import dotenv from "dotenv";
@@ -19,7 +24,6 @@ const nameGenerator = (bytes) => {
 }
 const filename = nameGenerator(12);
 export const uploadFileToS3 = async (file) => {
-  // resize the image to instangram profile picture size (110x110) using sharp
   const resizedImage = await sharp(file.buffer).resize(1290, 1080).toBuffer();
 
   const params = {
@@ -35,5 +39,23 @@ export const uploadFileToS3 = async (file) => {
   } catch (error) {
     console.error("Error uploading file to S3:", error);
     throw new Error("File upload failed");
+  }
+};
+
+// getting a signed URL for the file to be accessed
+export const getImageUrl = async (key) => {
+  const params = {
+    Bucket: process.env.AWS_S3_BUCKET_NAME,
+    Key: key,
+    Expires: 60 * 60, // URL expires in 1 hour
+  };
+
+  try {
+    const command = new GetObjectCommand(params);
+    const url = await getSignedUrl(s3, command);
+    return url;
+  } catch (error) {
+    console.error("Error getting signed URL:", error);
+    throw new Error("Could not get signed URL");
   }
 };

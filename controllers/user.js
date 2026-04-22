@@ -1,12 +1,22 @@
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 import { User } from "../models/user.js";
-import { uploadFileToS3 } from "../utils/file_upload.js";
+import { uploadFileToS3, getImageUrl } from "../utils/file_upload.js";
 
+let updatedUsers = [];
 export const getAllUsers = async (req, res) => {
   try {
     const users = await User.findAll();
-    res.status(200).json(users);
+    for(let user of users) {
+      let new_user = user.toJSON();
+      if (user.profilePicture) {
+        new_user.profilePicture = await getImageUrl(user.profilePicture);
+        updatedUsers.push(new_user);
+      } else {
+        updatedUsers.push(new_user);
+      }
+    }
+    res.status(200).json(updatedUsers);
   } catch (error) {
     console.error("Error fetching users:", error);
     res.status(500).json({ error: "Internal Server Error" });
@@ -39,6 +49,11 @@ export const getUserById = async (req, res) => {
     const user = await User.findByPk(id);
     if (!user) {
       return res.status(404).json({ error: "User not found" });
+    }
+    let new_user = user.toJSON();
+    if (user.profilePicture) {
+      new_user.profilePicture = await getImageUrl(user.profilePicture);
+      return res.status(200).json(new_user);
     }
     res.status(200).json(user);
   } catch (error) {
