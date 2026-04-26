@@ -8,10 +8,6 @@ export const initInventoryModel = (sequelize) => {
       primaryKey: true,
       defaultValue: DataTypes.UUIDV4,
     },
-    productId: {
-      type: DataTypes.UUID,
-      allowNull: false,
-    },
     quantity: {
       type: DataTypes.INTEGER,
       allowNull: false,

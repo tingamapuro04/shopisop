@@ -1,6 +1,7 @@
 import 'dotenv/config';
 import express from 'express';
 import userRouter from './routes/user.js';
+import productRouter from './routes/product.js';
 import sequelize from './utils/db.js';
 import { initUserModel } from './models/user.js';
 import { initProductModel, Product } from './models/product.js';
@@ -11,14 +12,16 @@ const app = express();
 app.use(express.json());
 
 app.use('/users', userRouter);
+app.use('/products', productRouter);
 
 const PORT = process.env.PORT || 3000;
 // set up the models and associations
-Inventory.belongsTo(Product, { foreignKey: 'productId' });
-Product.hasOne(Inventory, { foreignKey: 'productId' });
+
 initProductModel(sequelize);
 initInventoryModel(sequelize);
 initUserModel(sequelize);
+Product.hasOne(Inventory, { foreignKey: "productId" });
+Inventory.belongsTo(Product, { foreignKey: "productId" });
 // 
 const dbConnection = async () => {
   try {

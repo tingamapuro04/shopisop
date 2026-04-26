@@ -33,7 +33,7 @@ export const createUser = async (req, res) => {
       email,
       password: hashedPassword,
       role,
-      profilePicture: profilePicture || null,
+      profilePicture: profilePicture,
     });
     res.status(201).json(newUser);
   } catch (error) {
