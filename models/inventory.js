@@ -11,7 +11,17 @@ export const initInventoryModel = (sequelize) => {
     quantity: {
       type: DataTypes.INTEGER,
       allowNull: false,
+      // valid quantity must be a non-negative integer;
+      validate: {
+        isInt: true,
+        min: 0,
+      },
     },
+    productId: {
+      type: DataTypes.UUID,
+      allowNull: false,
+      unique: true, 
+    }
   },
 {
   timestamps: false,
