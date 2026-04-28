@@ -19,8 +19,13 @@ export const initProductModel = (sequelize) => {
     price: {
       type: DataTypes.FLOAT,
       allowNull: false,
+      // valid price must be a number;
+      validate: {
+        isFloat: true,
+        min: 0,
+      },
     },
-    imageUrl: {
+    productImage: {
       type: DataTypes.STRING,
       allowNull: true,
     },

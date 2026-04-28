@@ -8,14 +8,20 @@ export const initInventoryModel = (sequelize) => {
       primaryKey: true,
       defaultValue: DataTypes.UUIDV4,
     },
-    productId: {
-      type: DataTypes.UUID,
-      allowNull: false,
-    },
     quantity: {
       type: DataTypes.INTEGER,
       allowNull: false,
+      // valid quantity must be a non-negative integer;
+      validate: {
+        isInt: true,
+        min: 0,
+      },
     },
+    productId: {
+      type: DataTypes.UUID,
+      allowNull: false,
+      unique: true, 
+    }
   },
 {
   timestamps: false,
