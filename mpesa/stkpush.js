@@ -1,7 +1,7 @@
 const axios = require("axios");
 const { getAccessToken } = require("./auth");
 
-const initiateSTKPush = async () => {
+const initiateSTKPush = async ({orderId}) => {
   const { MPESA_SHORTCODE, MPESA_PASSKEY, MPESA_CALLBACK_URL, NODE_ENV } =
     process.env;
 
@@ -38,8 +38,8 @@ const initiateSTKPush = async () => {
       PartyB: MPESA_SHORTCODE,
       PhoneNumber: "254746651907",
       CallBackURL: MPESA_CALLBACK_URL,
-      AccountReference: `Order-${1}`,
-      TransactionDesc: `Payment for Order ${1}`,
+      AccountReference: `Order-${orderId}`,
+      TransactionDesc: `Payment for Order ${orderId}`,
     },
     {
       headers: { Authorization: `Bearer ${accessToken}` },

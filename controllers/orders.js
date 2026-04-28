@@ -22,6 +22,10 @@ export const createOrder = async (req, res) => {
         through: { quantity: item.quantity, priceAtPurchase: product.price },
       });
     }
+    // call the stk push function here to initiate payment
+    const payment = await initiateSTKPush({orderId: newOrder.id});
+    // update the order with the checkoutRequestId so we can match it in the callback
+    await newOrder.update({ checkoutRequestId: payment.CheckoutRequestID, status: "awaiting_payment" });
     res.status(201).json(newOrder);
   } catch (error) {
     console.error("Error creating order:", error);
