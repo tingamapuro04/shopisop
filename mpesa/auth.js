@@ -1,6 +1,6 @@
-const axios = require("axios");
+import axios from "axios";
 
-const getAccessToken = async () => {
+export const getAccessToken = async () => {
   const { MPESA_CONSUMER_KEY, MPESA_CONSUMER_SECRET, NODE_ENV } = process.env;
 
   const baseURL =
@@ -22,4 +22,4 @@ const getAccessToken = async () => {
   return response.data.access_token;
 };
 
-module.exports = { getAccessToken };
+

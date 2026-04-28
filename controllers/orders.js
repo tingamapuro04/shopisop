@@ -1,5 +1,6 @@
 import { Order } from "../models/orders.js";
 import { Product } from "../models/product.js";
+import { initiateSTKPush } from "../mpesa/stkpush.js";
 // Controller to create an order for a user with multiple products and calculate total price
 export const createOrder = async (req, res) => {
   try {
@@ -23,7 +24,7 @@ export const createOrder = async (req, res) => {
       });
     }
     // call the stk push function here to initiate payment
-    const payment = await initiateSTKPush({orderId: newOrder.id});
+    const payment = await initiateSTKPush({orderId: newOrder.id, totalPrice});
     // update the order with the checkoutRequestId so we can match it in the callback
     await newOrder.update({ checkoutRequestId: payment.CheckoutRequestID, status: "awaiting_payment" });
     res.status(201).json(newOrder);
