@@ -18,8 +18,7 @@ export const getAllUsers = async (req, res) => {
     }
     res.status(200).json(updatedUsers);
   } catch (error) {
-    console.error("Error fetching users:", error);
-    res.status(500).json({ error: "Internal Server Error" });
+    res.status(500).json({ error: "Internal Server Error", name: error.name });
   }
 };
 
@@ -37,8 +36,7 @@ export const registerUser = async (req, res) => {
     });
     res.status(201).json(newUser);
   } catch (error) {
-    console.error("Error creating user:", error);
-    res.status(500).json({ error: "Internal Server Error" });
+    res.status(500).json({ error: "Internal Server Error", name: error.name });
   }
 };
 
@@ -58,8 +56,7 @@ export const loginUser = async (req, res) => {
     const token = jwt.sign({ id: user.id, email: user.email, role: user.role }, process.env.JWT_SECRET, { expiresIn: "1h" });
     res.status(200).json({ token });
   } catch (error) {
-    console.error("Error logging in user:", error);
-    res.status(500).json({ error: "Internal Server Error" });
+    res.status(500).json({ error: "Internal Server Error", name: error.name });
   }
 };
 
@@ -78,7 +75,6 @@ export const getUserById = async (req, res) => {
     }
     res.status(200).json(user);
   } catch (error) {
-    console.error("Error fetching user:", error);
-    res.status(500).json({ error: "Internal Server Error" });
+    res.status(500).json({ error: "Internal Server Error", name: error.name });
   }
 };

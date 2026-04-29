@@ -14,8 +14,7 @@ export const createProduct = async (req, res) => {
     });
     res.status(201).json(newProduct);
   } catch (error) {
-    console.error("Error creating product:", error);
-    res.status(500).json({ error: "Internal Server Error" });
+    res.status(500).json({ error: "Internal Server Error", name: error.name });
   }
 };
 
@@ -35,7 +34,6 @@ export const getAllProducts = async (req, res) => {
     }
     res.status(200).json(updatedProducts);
   } catch (error) {
-    console.error("Error fetching products:", error);
-    res.status(500).json({ error: "Internal Server Error" });
+    res.status(500).json({ error: "Internal Server Error", name: error.name });
   }
 };

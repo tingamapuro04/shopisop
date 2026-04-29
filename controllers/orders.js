@@ -35,7 +35,6 @@ export const createOrder = async (req, res) => {
     await newOrder.update({ checkoutRequestId: payment.CheckoutRequestID, status: "awaiting_payment" });
     res.status(201).json(newOrder);
   } catch (error) {
-    console.error("Error creating order:", error);
     res.status(500).json({ error: "Internal Server Error", name: error.name });
   }
 };
@@ -53,8 +52,7 @@ export const getOrdersByUserId = async (req, res) => {
     });
     res.status(200).json(orders);
   } catch (error) {
-    console.error("Error fetching orders:", error);
-    res.status(500).json({ error: "Internal Server Error" });
+    res.status(500).json({ error: "Internal Server Error", name: error.name });
   }
 };  
 
