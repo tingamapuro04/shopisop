@@ -4,7 +4,8 @@ import { initiateSTKPush } from "../mpesa/stkpush.js";
 // Controller to create an order for a user with multiple products and calculate total price
 export const createOrder = async (req, res) => {
   try {
-    const { userId, products } = req.body; // products is an array of { productId, quantity }
+    const { products } = req.body; // products is an array of { productId, quantity }
+    const authenticatedUserId = req.user.id;
     let totalPrice = 0;
     for (let item of products) {
       const product = await Product.findByPk(item.productId);
@@ -14,11 +15,16 @@ export const createOrder = async (req, res) => {
       totalPrice += product.price * item.quantity;
     }
     const newOrder = await Order.create({
-      userId,
+      userId: authenticatedUserId,
       totalPrice,
     });
     for (const item of products) {
       const product = await Product.findByPk(item.productId);
+      const productInventory = await product.getInventory();
+      if (productInventory.quantity < item.quantity) {
+        return res.status(400).json({ error: `Insufficient stock for product ${product.name}` });
+      }
+      await productInventory.decrement("quantity", { by: item.quantity });
       await newOrder.addProduct(product, {
         through: { quantity: item.quantity, priceAtPurchase: product.price },
       });
@@ -30,7 +36,7 @@ export const createOrder = async (req, res) => {
     res.status(201).json(newOrder);
   } catch (error) {
     console.error("Error creating order:", error);
-    res.status(500).json({ error: "Internal Server Error" });
+    res.status(500).json({ error: "Internal Server Error", name: error.name });
   }
 };
 
