@@ -56,3 +56,23 @@ export const getOrdersByUserId = async (req, res) => {
   }
 };  
 
+// Controller to get a single order by id and include product details
+export const getOrderById = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const order = await Order.findByPk(id, {
+      include: {
+        model: Product,
+        through: { attributes: ["quantity"] },
+      },
+    });
+    if (!order) {
+      return res.status(404).json({ error: "Order not found" });
+    }
+    res.status(200).json(order);
+  } catch (error) {
+    res.status(500).json({ error: "Internal Server Error", name: error.name });
+  }
+};
+
+

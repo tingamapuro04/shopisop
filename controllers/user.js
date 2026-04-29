@@ -78,3 +78,56 @@ export const getUserById = async (req, res) => {
     res.status(500).json({ error: "Internal Server Error", name: error.name });
   }
 };
+
+// update a user's profile picture
+export const updateProfilePicture = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const user = await User.findByPk(id);
+    if (!user) {
+      return res.status(404).json({ error: "User not found" });
+    }
+    const profilePicture = req.file ? await uploadFileToS3(req.file) : null;
+    await user.update({ profilePicture });
+    let updated_user = user.toJSON();
+    if (user.profilePicture) {
+      updated_user.profilePicture = await getImageUrl(user.profilePicture);
+      return res.status(200).json(updated_user);
+    }
+    res.status(200).json(user);
+  } catch (error) {
+    res.status(500).json({ error: "Internal Server Error", name: error.name });
+  }
+};
+
+// promote a user to admin role
+export const promoteToAdmin = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const user = await User.findByPk(id);
+    if (!user) {
+      return res.status(404).json({ error: "User not found" });
+    }
+    await user.update({ role: "admin" });
+    res.status(200).json(user);
+  } catch (error) {
+    res.status(500).json({ error: "Internal Server Error", name: error.name });
+  }
+};
+
+// soft delete a user by setting the deletedAt field to the current date and time and soft delete all orders associated with the user as well
+export const deleteUser = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const user = await User.findByPk(id);
+    if (!user) {
+      return res.status(404).json({ error: "User not found" });
+    }
+    await user.update({ deletedAt: new Date() });
+    await Order.update({ deletedAt: new Date() }, { where: { userId: id } });
+    res.status(200).json({ message: "User and associated orders soft deleted successfully" });
+  } catch (error) {
+    res.status(500).json({ error: "Internal Server Error", name: error.name });
+  }
+};
+

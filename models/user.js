@@ -42,6 +42,10 @@ export const initUserModel = (sequelize) => {
       type: DataTypes.STRING,
       allowNull: true,
     },
+    deletedAt: {
+      type: DataTypes.DATE,
+      allowNull: true,
+    },
   },
 {
   timestamps: false,

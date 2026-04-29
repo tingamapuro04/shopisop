@@ -47,6 +47,10 @@ export const initOrderModel = (sequelize) => {
         min: 0,
       },
     },
+      deletedAt: {
+      type: DataTypes.DATE,
+      allowNull: true,
+    },
   },
 {
   timestamps: false,
