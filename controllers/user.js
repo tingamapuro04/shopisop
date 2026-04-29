@@ -24,7 +24,7 @@ export const getAllUsers = async (req, res) => {
 };
 
 // create a new user and hash the password before saving to the database
-export const createUser = async (req, res) => {
+export const registerUser = async (req, res) => {
   try {
     const { email, password, role } = req.body;
     const profilePicture = req.file ? await uploadFileToS3(req.file) : null;
@@ -38,6 +38,27 @@ export const createUser = async (req, res) => {
     res.status(201).json(newUser);
   } catch (error) {
     console.error("Error creating user:", error);
+    res.status(500).json({ error: "Internal Server Error" });
+  }
+};
+
+
+// login a user and return a JWT token
+export const loginUser = async (req, res) => {
+  try {
+    const { email, password } = req.body;
+    const user = await User.findOne({ where: { email } });
+    if (!user) {
+      return res.status(404).json({ error: "User not found" });
+    }
+    const isPasswordValid = await bcrypt.compare(password, user.password);
+    if (!isPasswordValid) {
+      return res.status(401).json({ error: "Invalid credentials" });
+    }
+    const token = jwt.sign({ id: user.id, email: user.email, role: user.role }, process.env.JWT_SECRET, { expiresIn: "1h" });
+    res.status(200).json({ token });
+  } catch (error) {
+    console.error("Error logging in user:", error);
     res.status(500).json({ error: "Internal Server Error" });
   }
 };

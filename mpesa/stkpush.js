@@ -1,7 +1,7 @@
-const axios = require("axios");
-const { getAccessToken } = require("./auth");
+import axios from "axios";
+import { getAccessToken } from "./auth.js";
 
-const initiateSTKPush = async () => {
+export const initiateSTKPush = async ({orderId, totalPrice}) => {
   const { MPESA_SHORTCODE, MPESA_PASSKEY, MPESA_CALLBACK_URL, NODE_ENV } =
     process.env;
 
@@ -33,13 +33,13 @@ const initiateSTKPush = async () => {
       Password: password,
       Timestamp: timestamp,
       TransactionType: "CustomerPayBillOnline",
-      Amount: 1, // M-Pesa requires whole numbers
+      Amount: Math.ceil(totalPrice), // M-Pesa requires whole numbers
       PartyA: "254746651907", // Customer phone
       PartyB: MPESA_SHORTCODE,
       PhoneNumber: "254746651907",
       CallBackURL: MPESA_CALLBACK_URL,
-      AccountReference: `Order-${1}`,
-      TransactionDesc: `Payment for Order ${1}`,
+      AccountReference: `Order-${orderId}`,
+      TransactionDesc: `Payment for Order ${orderId}`,
     },
     {
       headers: { Authorization: `Bearer ${accessToken}` },
@@ -50,4 +50,3 @@ const initiateSTKPush = async () => {
   // Returns: { MerchantRequestID, CheckoutRequestID, ResponseCode, ResponseDescription }
 };
 
-module.exports = { initiateSTKPush };

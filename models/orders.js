@@ -21,6 +21,23 @@ export const initOrderModel = (sequelize) => {
         isIn: [["pending", "completed", "cancelled"]],
       },
     },
+    checkoutRequestId: {
+      type: DataTypes.STRING,
+      allowNull: true,
+      unique: true,
+    },
+    status: {
+      type: DataTypes.STRING,
+      allowNull: false,
+      defaultValue: "pending",
+      validate: {
+        isIn: [["pending", "awaiting_payment", "paid", "payment_failed"]],
+      },
+    },
+    mpesaRef: {
+      type: DataTypes.STRING,
+      allowNull: true,
+    },
     totalPrice: {
       type: DataTypes.FLOAT,
       allowNull: false,
