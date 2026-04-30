@@ -5,6 +5,8 @@ import productRouter from './routes/product.js';
 import inventoryRouter from './routes/inventory.js';
 import orderRouter from './routes/orders.js';
 import sequelize from './utils/db.js';
+import rateLimit from "express-rate-limit";
+import cors from 'cors';
 import { initUserModel } from './models/user.js';
 import { initProductModel, Product } from './models/product.js';
 import { initInventoryModel, Inventory } from './models/inventory.js';
@@ -16,12 +18,22 @@ import { OrderItem } from './models/orderItem.js';
 
 
 const app = express();
+app.use(cors());
 app.use(express.json());
+
+const limiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes window
+  limit: 100, // Limit each IP to 100 requests per windowMs
+  message: "Too many requests from this IP, please try again after 15 minutes",
+  standardHeaders: true, // Return rate limit info in the `RateLimit-*` headers
+  legacyHeaders: false, // Disable the `X-RateLimit-*` headers
+});
 
 app.use('/users', userRouter);
 app.use('/products', productRouter);
 app.use('/inventory', inventoryRouter);
 app.use('/orders', orderRouter);
+app.use(limiter);
 
 const PORT = process.env.PORT || 3000;
 // set up the models and associations
