@@ -1,44 +1,134 @@
 import { Order } from "../models/orders.js";
 import { Product } from "../models/product.js";
 import { initiateSTKPush } from "../mpesa/stkpush.js";
-// Controller to create an order for a user with multiple products and calculate total price
+import sequelize from "../utils/db.js";
+
 export const createOrder = async (req, res) => {
+  let transaction;
+
   try {
-    const { products } = req.body; // products is an array of { productId, quantity }
+    const { products } = req.body; // [{ productId, quantity }]
     const authenticatedUserId = req.user.id;
-    let totalPrice = 0;
-    for (let item of products) {
-      const product = await Product.findByPk(item.productId);
-      if (!product) {
-        return res.status(404).json({ error: `Product with id ${item.productId} not found` });
-      }
-      totalPrice += product.price * item.quantity;
-    }
-    const newOrder = await Order.create({
-      userId: authenticatedUserId,
-      totalPrice,
-    });
-    for (const item of products) {
-      const product = await Product.findByPk(item.productId);
-      const productInventory = await product.getInventory();
-      if (productInventory.quantity < item.quantity) {
-        return res.status(400).json({ error: `Insufficient stock for product ${product.name}` });
-      }
-      await productInventory.decrement("quantity", { by: item.quantity });
-      await newOrder.addProduct(product, {
-        through: { quantity: item.quantity, priceAtPurchase: product.price },
+
+    if (!products || !Array.isArray(products) || products.length === 0) {
+      return res.status(400).json({
+        error: "Products are required",
       });
     }
-    // call the stk push function here to initiate payment
-    const payment = await initiateSTKPush({orderId: newOrder.id, totalPrice});
-    // update the order with the checkoutRequestId so we can match it in the callback
-    await newOrder.update({ checkoutRequestId: payment.CheckoutRequestID, status: "awaiting_payment" });
-    res.status(201).json(newOrder);
+
+    let totalPrice = 0;
+    const validatedProducts = [];
+
+    // STEP 1: Start transaction
+    transaction = await sequelize.transaction();
+
+    // STEP 2: Fetch + validate all products + inventory first
+    for (const item of products) {
+      const product = await Product.findByPk(item.productId, {
+        transaction,
+        lock: transaction.LOCK.UPDATE, // prevents race conditions
+      });
+
+      if (!product) {
+        await transaction.rollback();
+        return res.status(404).json({
+          error: `Product with id ${item.productId} not found`,
+        });
+      }
+
+      const productInventory = await product.getInventory({
+        transaction,
+        lock: transaction.LOCK.UPDATE,
+      });
+
+      if (!productInventory) {
+        await transaction.rollback();
+        return res.status(404).json({
+          error: `Inventory not found for product ${product.name}`,
+        });
+      }
+
+      if (productInventory.quantity < item.quantity) {
+        await transaction.rollback();
+        return res.status(400).json({
+          error: `Insufficient stock for product ${product.name}`,
+        });
+      }
+
+      totalPrice += product.price * item.quantity;
+
+      validatedProducts.push({
+        product,
+        productInventory,
+        quantity: item.quantity,
+        priceAtPurchase: product.price,
+      });
+    }
+
+    // STEP 3: Create order inside transaction
+    const newOrder = await Order.create(
+      {
+        userId: authenticatedUserId,
+        totalPrice,
+        status: "pending",
+      },
+      { transaction },
+    );
+
+    // STEP 4: Reduce inventory + attach products
+    for (const item of validatedProducts) {
+      await item.productInventory.decrement("quantity", {
+        by: item.quantity,
+        transaction,
+      });
+
+      await newOrder.addProduct(item.product, {
+        through: {
+          quantity: item.quantity,
+          priceAtPurchase: item.priceAtPurchase,
+        },
+        transaction,
+      });
+    }
+
+    // STEP 5: Commit DB transaction first
+    await transaction.commit();
+
+    // STEP 6: Call M-Pesa AFTER commit
+    try {
+      const payment = await initiateSTKPush({
+        orderId: newOrder.id,
+        totalPrice,
+      });
+
+      await newOrder.update({
+        checkoutRequestId: payment.CheckoutRequestID,
+        status: "awaiting_payment",
+      });
+
+      return res.status(201).json(newOrder);
+    } catch (paymentError) {
+      // Order exists, but payment failed
+      await newOrder.update({
+        status: "payment_failed",
+      });
+
+      return res.status(500).json({
+        error: "Order created but payment initiation failed",
+        name: paymentError.name,
+      });
+    }
   } catch (error) {
-    res.status(500).json({ error: "Internal Server Error", name: error.name });
+    if (transaction) {
+      await transaction.rollback();
+    }
+    console.log(error)
+    return res.status(500).json({
+      error: "Internal Server Error",
+      name: error.name,
+    });
   }
 };
-
 // Controller to get all orders for a user and include product details
 export const getOrdersByUserId = async (req, res) => {
   try {
@@ -74,5 +164,3 @@ export const getOrderById = async (req, res) => {
     res.status(500).json({ error: "Internal Server Error", name: error.name });
   }
 };
-
-

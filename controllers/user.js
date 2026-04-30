@@ -3,10 +3,13 @@ import jwt from "jsonwebtoken";
 import { User } from "../models/user.js";
 import { uploadFileToS3, getImageUrl } from "../utils/file_upload.js";
 
-let updatedUsers = [];
+
 export const getAllUsers = async (req, res) => {
+  let updatedUsers = [];
   try {
-    const users = await User.findAll();
+    const users = await User.findAll({
+      attributes: { exclude: ["password"] },
+    });
     for(let user of users) {
       let new_user = user.toJSON();
       if (user.profilePicture) {
@@ -34,8 +37,9 @@ export const registerUser = async (req, res) => {
       role,
       profilePicture: profilePicture,
     });
-    res.status(201).json(newUser);
+    res.status(201).json({ id: newUser.id, email: newUser.email, role: newUser.role, profilePicture: newUser.profilePicture });
   } catch (error) {
+    console.log(error)
     res.status(500).json({ error: "Internal Server Error", name: error.name });
   }
 };
@@ -122,6 +126,10 @@ export const deleteUser = async (req, res) => {
     const user = await User.findByPk(id);
     if (!user) {
       return res.status(404).json({ error: "User not found" });
+    }
+    // make sure that authenticated user can only delete their own account;
+    if (req.user.id !== user.id) {
+      return res.status(403).json({ error: "Forbidden: You can only delete your own account" });
     }
     await user.update({ deletedAt: new Date() });
     await Order.update({ deletedAt: new Date() }, { where: { userId: id } });

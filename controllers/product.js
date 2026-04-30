@@ -1,5 +1,7 @@
 import { Product } from "../models/product.js";
 import { uploadFileToS3, getImageUrl } from "../utils/file_upload.js";
+import { Inventory } from "../models/inventory.js";
+import { Op } from "sequelize";
 
 //create a new product
 export const createProduct = async (req, res) => {

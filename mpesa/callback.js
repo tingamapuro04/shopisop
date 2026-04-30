@@ -22,6 +22,19 @@ export const handleMpesaCallback = async (req, res) => {
 
     const getValue = (name) =>
       metadata.find((item) => item.Name === name)?.Value;
+    console.log(getValue)
+    const stkAmount = getValue("Amount");
+    // find the order by checkoutRequestId and verify amount matches
+    const order = await Order.findOne({ where: { checkoutRequestId: CheckoutRequestID } });
+    if (!order) {
+      console.log(`Order not found for CheckoutRequestID: ${CheckoutRequestID}`);
+      return;
+    }
+    if (order.totalPrice !== stkAmount) {
+      console.log(`Amount mismatch for order ${order.id}: expected ${order.totalPrice}, got ${stkAmount}`);
+      // Optionally handle this case (e.g., flag for manual review)
+      return;
+    }
 
     const paymentData = {
       amount: getValue("Amount"),
@@ -40,7 +53,6 @@ export const handleMpesaCallback = async (req, res) => {
 
 const handleSuccessfulPayment = async (paymentData) => {
   // 1. Find the order by checkoutRequestId (you stored this when initiating STK)
-  const order = await Order.findOne({ checkoutRequestId: paymentData.checkoutRequestId });
 
   // 2. Update order status
   await Order.update(
@@ -60,7 +72,7 @@ const handleSuccessfulPayment = async (paymentData) => {
 
 const handleFailedPayment = async (checkoutRequestId, reason) => {
   // Update order status to failed/pending
-  await Order.update({ checkoutRequestId, status: "payment_failed" }, {
+  await Order.update({ status: "payment_failed" }, {
     where: { checkoutRequestId },
   });
   // Optionally notify customer

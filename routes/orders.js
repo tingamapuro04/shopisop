@@ -7,8 +7,8 @@ import { authenticateToken } from "../middlewares/authenticateToken.js";
 import { authorizeRoles } from "../middlewares/authorize.js";
 orderRouter.post("/", authenticateToken, authorizeRoles('user'), createOrder);
 orderRouter.post("/mpesa/callback", handleMpesaCallback);
-orderRouter.get("/user/:userId", getOrdersByUserId);
-orderRouter.get("/:id", getOrderById);
+orderRouter.get("/user/:userId", authenticateToken, getOrdersByUserId);
+orderRouter.get("/:id", authenticateToken, getOrderById);
 
 
 export default orderRouter;

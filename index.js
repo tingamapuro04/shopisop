@@ -28,12 +28,12 @@ const limiter = rateLimit({
   standardHeaders: true, // Return rate limit info in the `RateLimit-*` headers
   legacyHeaders: false, // Disable the `X-RateLimit-*` headers
 });
-
+app.use(limiter);
 app.use('/users', userRouter);
 app.use('/products', productRouter);
 app.use('/inventory', inventoryRouter);
 app.use('/orders', orderRouter);
-app.use(limiter);
+
 
 const PORT = process.env.PORT || 3000;
 // set up the models and associations

@@ -22,9 +22,10 @@ const s3 = new S3Client({
 const nameGenerator = (bytes) => {
   return crypto.randomBytes(bytes).toString("hex");
 }
-const filename = nameGenerator(12);
+
 export const uploadFileToS3 = async (file) => {
   const resizedImage = await sharp(file.buffer).resize(1290, 1080).toBuffer();
+  const filename = nameGenerator(12);
 
   const params = {
     Bucket: process.env.AWS_S3_BUCKET_NAME,

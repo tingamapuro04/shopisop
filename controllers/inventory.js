@@ -1,4 +1,5 @@
 import { Inventory } from "../models/inventory.js";
+import { Product } from "../models/product.js";
 // Controller to create inventory for a product
 export const createInventory = async (req, res) => {
   try {
