@@ -10,6 +10,7 @@ const upload = multer({ storage: storage });
 
 import { getAllUsers, getUserById, registerUser, loginUser, updateProfilePicture, promoteToAdmin, deleteUser } from "../controllers/user.js";
 import { authenticateToken } from "../middlewares/authenticateToken.js";
+import { authorizeRoles } from "../middlewares/authorize.js";
 
 
 const authLimiter = rateLimit({
@@ -24,13 +25,13 @@ const registLimiter = rateLimit({
   message: "Too many signup attempts, please try again later",
 });
 
-userRouter.get("/", getAllUsers);
+userRouter.get("/", authenticateToken, getAllUsers);
 userRouter.post("/", registLimiter, upload.single("profilePicture"), registerUser);
 userRouter.post("/login", authLimiter, loginUser);
 userRouter.put("/:id", authenticateToken, upload.single("profilePicture"), updateProfilePicture);
-userRouter.patch("/:id", authenticateToken, promoteToAdmin);
+userRouter.patch("/:id", authenticateToken, authorizeRoles('superAdmin'), promoteToAdmin);
 userRouter.delete("/:id", authenticateToken, deleteUser);
-userRouter.get("/:id", getUserById);
+userRouter.get("/:id", authenticateToken, getUserById);
 
 
 export default userRouter;

@@ -133,6 +133,10 @@ export const createOrder = async (req, res) => {
 export const getOrdersByUserId = async (req, res) => {
   try {
     const { userId } = req.params;
+    // Ensure the authenticated user is requesting their own orders
+    if (parseInt(userId) !== req.user.id) {
+      return res.status(403).json({ error: "Forbidden" });
+    }
     const orders = await Order.findAll({
       where: { userId },
       include: {

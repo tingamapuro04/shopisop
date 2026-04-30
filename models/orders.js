@@ -13,14 +13,6 @@ export const initOrderModel = (sequelize) => {
       type: DataTypes.UUID,
       allowNull: false,
     },
-    status: {
-      type: DataTypes.STRING,
-      allowNull: false,
-      defaultValue: "pending",
-      validate: {
-        isIn: [["pending", "completed", "cancelled"]],
-      },
-    },
     checkoutRequestId: {
       type: DataTypes.STRING,
       allowNull: true,

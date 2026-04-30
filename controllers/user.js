@@ -2,6 +2,7 @@ import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 import { User } from "../models/user.js";
 import { uploadFileToS3, getImageUrl } from "../utils/file_upload.js";
+import { Order } from "../models/orders.js";
 
 
 export const getAllUsers = async (req, res) => {
@@ -87,6 +88,10 @@ export const getUserById = async (req, res) => {
 export const updateProfilePicture = async (req, res) => {
   try {
     const { id } = req.params;
+    // ensure that authenticated user can only update their own profile picture
+    if (req.user.id !== parseInt(id)) {
+      return res.status(403).json({ error: "Forbidden: You can only update your own profile picture" });
+    }
     const user = await User.findByPk(id);
     if (!user) {
       return res.status(404).json({ error: "User not found" });

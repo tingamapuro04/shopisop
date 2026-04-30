@@ -53,7 +53,7 @@ Product.belongsToMany(Order, { through: OrderItem, foreignKey: "productId" });
 const dbConnection = async () => {
   try {
     await sequelize.authenticate();
-    sequelize.sync({ alter: true});
+    await sequelize.sync({ alter: true});
     app.listen(PORT, () => {
       console.log(`Server is running on port ${PORT}`);
     });

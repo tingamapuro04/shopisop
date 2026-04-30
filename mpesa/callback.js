@@ -22,7 +22,6 @@ export const handleMpesaCallback = async (req, res) => {
 
     const getValue = (name) =>
       metadata.find((item) => item.Name === name)?.Value;
-    console.log(getValue)
     const stkAmount = getValue("Amount");
     // find the order by checkoutRequestId and verify amount matches
     const order = await Order.findOne({ where: { checkoutRequestId: CheckoutRequestID } });
@@ -30,7 +29,7 @@ export const handleMpesaCallback = async (req, res) => {
       console.log(`Order not found for CheckoutRequestID: ${CheckoutRequestID}`);
       return;
     }
-    if (order.totalPrice !== stkAmount) {
+    if (order.totalPrice !== Number(stkAmount)) {
       console.log(`Amount mismatch for order ${order.id}: expected ${order.totalPrice}, got ${stkAmount}`);
       // Optionally handle this case (e.g., flag for manual review)
       return;
