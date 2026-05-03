@@ -6,6 +6,7 @@ export const handleMpesaCallback = async (req, res) => {
 
   // Defer business logic so it runs after the response is sent
   setImmediate(async () => {
+    console.log("Starting the callback")
     const { Body } = req.body;
     const { stkCallback } = Body;
 

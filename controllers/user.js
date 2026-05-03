@@ -89,7 +89,7 @@ export const updateProfilePicture = async (req, res) => {
   try {
     const { id } = req.params;
     // ensure that authenticated user can only update their own profile picture
-    if (req.user.id !== parseInt(id)) {
+    if (req.user.id !== id) {
       return res.status(403).json({ error: "Forbidden: You can only update your own profile picture" });
     }
     const user = await User.findByPk(id);
@@ -103,7 +103,15 @@ export const updateProfilePicture = async (req, res) => {
       updated_user.profilePicture = await getImageUrl(user.profilePicture);
       return res.status(200).json(updated_user);
     }
-    res.status(200).json(user);
+    res.status(200).json({
+      message: "Profile picture updated successfully",
+      attributes: {
+        id: user.id,
+        email: user.email,
+        role: user.role,
+        profilePicture: user.profilePicture,
+      },
+    });
   } catch (error) {
     res.status(500).json({ error: "Internal Server Error", name: error.name });
   }

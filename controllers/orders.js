@@ -130,13 +130,13 @@ export const createOrder = async (req, res) => {
   }
 };
 // Controller to get all orders for a user and include product details
-export const getOrdersByUserId = async (req, res) => {
+export const getMyOrders = async (req, res) => {
   try {
-    const { userId } = req.params;
+    const userId = req.user.id;
     // Ensure the authenticated user is requesting their own orders
-    if (parseInt(userId) !== req.user.id) {
-      return res.status(403).json({ error: "Forbidden" });
-    }
+    // if (parseInt(userId) !== req.user.id) {
+    //   return res.status(403).json({ error: "Forbidden" });
+    // }
     const orders = await Order.findAll({
       where: { userId },
       include: {

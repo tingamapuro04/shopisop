@@ -23,7 +23,12 @@ export const createProduct = async (req, res) => {
 // get all products and include image signed URLs if they exist
 export const getAllProducts = async (req, res) => {
   try {
-    const products = await Product.findAll();
+    const products = await Product.findAll({
+      include: {
+        model: Inventory,
+        attributes: ["quantity"],
+      }
+    });
     const updatedProducts = [];
     for (let product of products) {
       let new_product = product.toJSON();
