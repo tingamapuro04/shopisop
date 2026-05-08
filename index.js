@@ -18,7 +18,12 @@ import { OrderItem } from './models/orderItem.js';
 
 
 const app = express();
-app.use(cors());
+app.use(
+  cors({
+    origin: "http://localhost:5173", // Vite's default port
+    credentials: true,
+  }),
+);
 app.use(express.json());
 
 const limiter = rateLimit({
@@ -50,16 +55,31 @@ Order.belongsTo(User, { foreignKey: "userId" });
 Order.belongsToMany(Product, { through: OrderItem, foreignKey: "orderId" });
 Product.belongsToMany(Order, { through: OrderItem, foreignKey: "productId" });
 // 
-const dbConnection = async () => {
-  try {
-    await sequelize.authenticate();
-    await sequelize.sync({ alter: true});
-    app.listen(PORT, () => {
-      console.log(`Server is running on port ${PORT}`);
-    });
-    console.log('Database connection has been established successfully.');
-  } catch (error) {
-    console.error('Unable to connect to the database:', error);
+const dbConnection = async (retries = 5, delay = 10000) => {
+  for (let i = 0; i < retries; i++) {
+    try {
+      await sequelize.authenticate();
+      await sequelize.sync({ alter: true });
+      app.listen(PORT, () => {
+        console.log(`Server is running on port ${PORT}`);
+      });
+      console.log("Database connection has been established successfully.");
+      return;
+    } catch (error) {
+      console.error(
+        `Connection attempt ${i + 1} of ${retries} failed:`,
+        error,
+      );
+      if (i < retries - 1) {
+        console.log(`Retrying in ${delay / 1000} seconds...`);
+        await new Promise((res) => setTimeout(res, delay));
+      } else {
+        console.error(
+          "All retry attempts exhausted. Unable to connect to the database.",
+        );
+        process.exit(1);
+      }
+    }
   }
 };
 

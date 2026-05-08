@@ -58,8 +58,12 @@ export const loginUser = async (req, res) => {
     if (!isPasswordValid) {
       return res.status(401).json({ error: "Invalid credentials" });
     }
-    const token = jwt.sign({ id: user.id, email: user.email, role: user.role }, process.env.JWT_SECRET, { expiresIn: "1h" });
-    res.status(200).json({ token });
+    // also include the user's profile picture URL in the token payload if it exists
+    if (user.profilePicture) {
+      user.profilePicture = await getImageUrl(user.profilePicture);
+    }
+    const token = jwt.sign({ id: user.id, email: user.email, role: user.role, profilePicture: user.profilePicture }, process.env.JWT_SECRET, { expiresIn: "1h" });
+    res.status(200).json({ token, user: { id: user.id, email: user.email, role: user.role } });
   } catch (error) {
     res.status(500).json({ error: "Internal Server Error", name: error.name });
   }
@@ -85,38 +89,70 @@ export const getUserById = async (req, res) => {
 };
 
 // update a user's profile picture
+// export const updateProfilePicture = async (req, res) => {
+//   try {
+//     const { id } = req.params;
+//     // ensure that authenticated user can only update their own profile picture
+//     if (req.user.id !== id) {
+//       return res.status(403).json({ error: "Forbidden: You can only update your own profile picture" });
+//     }
+//     const user = await User.findByPk(id);
+//     if (!user) {
+//       return res.status(404).json({ error: "User not found" });
+//     }
+//     const profilePicture = req.file ? await uploadFileToS3(req.file) : null;
+//     await user.update({ profilePicture });
+//     let updated_user = user.toJSON();
+//     if (user.profilePicture) {
+//       updated_user.profilePicture = await getImageUrl(user.profilePicture);
+//       return res.status(200).json(updated_user);
+//     }
+//     res.status(200).json({
+//       message: "Profile picture updated successfully",
+//       attributes: {
+//         id: user.id,
+//         email: user.email,
+//         role: user.role,
+//         profilePicture: user.profilePicture,
+//       },
+//     });
+//   } catch (error) {
+//     res.status(500).json({ error: "Internal Server Error", name: error.name });
+//   }
+// };
 export const updateProfilePicture = async (req, res) => {
   try {
     const { id } = req.params;
-    // ensure that authenticated user can only update their own profile picture
+
     if (req.user.id !== id) {
-      return res.status(403).json({ error: "Forbidden: You can only update your own profile picture" });
+      return res
+        .status(403)
+        .json({
+          error: "Forbidden: You can only update your own profile picture",
+        });
     }
+
     const user = await User.findByPk(id);
     if (!user) {
       return res.status(404).json({ error: "User not found" });
     }
-    const profilePicture = req.file ? await uploadFileToS3(req.file) : null;
-    await user.update({ profilePicture });
-    let updated_user = user.toJSON();
-    if (user.profilePicture) {
-      updated_user.profilePicture = await getImageUrl(user.profilePicture);
-      return res.status(200).json(updated_user);
+
+    if (!req.file) {
+      return res.status(400).json({ error: "No file provided" });
     }
-    res.status(200).json({
-      message: "Profile picture updated successfully",
-      attributes: {
-        id: user.id,
-        email: user.email,
-        role: user.role,
-        profilePicture: user.profilePicture,
-      },
-    });
+
+    const profilePicture = await uploadFileToS3(req.file);
+    await user.update({ profilePicture });
+    await user.reload(); // ensures user now reflects the updated value
+
+    const updated_user = user.toJSON();
+    updated_user.profilePicture = await getImageUrl(user.profilePicture);
+
+    return res.status(200).json(updated_user);
   } catch (error) {
     res.status(500).json({ error: "Internal Server Error", name: error.name });
   }
 };
-
 // promote a user to admin role
 export const promoteToAdmin = async (req, res) => {
   try {

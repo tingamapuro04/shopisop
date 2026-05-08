@@ -4,6 +4,21 @@ import { Product } from "../models/product.js";
 export const createInventory = async (req, res) => {
   try {
     const { productId, quantity } = req.body;
+    // check if product exists
+    const product = await Product.findByPk(productId);
+    if (!product) {
+      return res.status(404).json({ error: "Product not found" });
+    }
+    // check if quantity is present and is a non-negative integer
+    if (quantity === undefined || quantity < 0 || !Number.isInteger(quantity)) {
+      clg("Invalid quantity. Quantity must be a non-negative integer.");
+      return res.status(400).json({ error: "Invalid quantity. Quantity must be a non-negative integer." });
+    }
+    // check if inventory already exists for this product
+    const existingInventory = await Inventory.findOne({ where: { productId } });
+    if (existingInventory) {
+      return res.status(400).json({ error: "Inventory already exists for this product" });
+    } 
     const newInventory = await Inventory.create({
       productId,
       quantity,
@@ -67,6 +82,6 @@ export const updateInventory = async (req, res) => {
     res.status(200).json(inventory);
   } catch (error) {
     console.error("Error updating inventory:", error);
-    res.status(500).json({ error: "Internal Server Error", name: error.name });
+    res.status(500).json({ error: "Inte Server Error", name: error.name });
   }
 };
