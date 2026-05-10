@@ -16,7 +16,6 @@ import { User } from './models/user.js';
 import { Order } from './models/orders.js';
 import { OrderItem } from './models/orderItem.js';
 
-
 const app = express();
 app.use(
   cors({
