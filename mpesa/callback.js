@@ -1,5 +1,4 @@
 import {Order} from "../models/orders.js";
-import { notifyOrderStatusChange} from "../controllers/orders.js";
 
 export const handleMpesaCallback = async (req, res) => {
   // Always acknowledge Safaricom immediately
