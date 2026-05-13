@@ -168,3 +168,47 @@ export const getOrderById = async (req, res) => {
     res.status(500).json({ error: "Internal Server Error", name: error.name });
   }
 };
+// const sseClients = new Map();
+// export const sseOrderStatusUpdates = async (req, res) => {
+//   try {
+//     const orderId = req.params.id;
+//     console.log("[SSE] client connected for order:", orderId);
+//     console.log("[SSE] user from token:", req.user);
+
+//     res.setHeader("Content-Type", "text/event-stream");
+//     res.setHeader("Cache-Control", "no-cache");
+//     res.setHeader("Connection", "keep-alive");
+//     res.setHeader("X-Accel-Buffering", "no");
+//     res.flushHeaders();
+//     console.log("[SSE] headers flushed");
+
+//     if (!sseClients.has(orderId)) sseClients.set(orderId, new Set());
+//     sseClients.get(orderId).add(res);
+//     console.log(
+//       "[SSE] client registered, total clients for order:",
+//       sseClients.get(orderId).size,
+//     );
+
+//     const heartbeat = setInterval(() => {
+//       console.log("[SSE] sending heartbeat for order:", orderId);
+//       res.write(": heartbeat\n\n");
+//     }, 25000);
+
+//     req.on("close", () => {
+//       console.log("[SSE] client disconnected for order:", orderId);
+//       clearInterval(heartbeat);
+//       sseClients.get(orderId)?.delete(res);
+//     });
+//   } catch (err) {
+//     console.error("[SSE] handler crashed:", err);
+//   }
+// };
+
+// Call this helper whenever you update an order's status
+// export function notifyOrderStatusChange(orderId, newStatus, mpesaRef = null) {
+//   const clients = sseClients.get(String(orderId));
+//   if (!clients?.size) return;
+
+//   const payload = JSON.stringify({ status: newStatus, mpesaRef });
+//   clients.forEach((res) => res.write(`data: ${payload}\n\n`));
+// }

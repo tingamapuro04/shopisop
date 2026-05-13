@@ -1,4 +1,5 @@
 import {Order} from "../models/orders.js";
+import { notifyOrderStatusChange} from "../controllers/orders.js";
 
 export const handleMpesaCallback = async (req, res) => {
   // Always acknowledge Safaricom immediately
@@ -61,6 +62,11 @@ const handleSuccessfulPayment = async (paymentData) => {
       where: { checkoutRequestId: paymentData.checkoutRequestId },
     },
   );
+  // notifyOrderStatusChange(
+  //   paymentData.checkoutRequestId,
+  //   "paid",
+  //   paymentData.mpesaReceiptNumber,
+  // );
 
   // 3. Send notification to customer (SMS, email, push notification)
   // await sendNotification(order.customerId, `Payment of KES ${paymentData.amount} received. Ref: ${paymentData.mpesaReceiptNumber}`);
@@ -75,6 +81,7 @@ const handleFailedPayment = async (checkoutRequestId, reason) => {
   await Order.update({ status: "payment_failed" }, {
     where: { checkoutRequestId },
   });
+  // notifyOrderStatusChange(checkoutRequestId, "payment_failed", null);
   // Optionally notify customer
   console.log(`❌ Payment failed for ${checkoutRequestId}: ${reason}`);
 };
