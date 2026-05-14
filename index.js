@@ -19,7 +19,10 @@ import { OrderItem } from './models/orderItem.js';
 const app = express();
 app.use(
   cors({
-    origin: "http://localhost:5173", // Vite's default port
+    origin: [
+      "https://nunuabidhaa.netlify.app/",
+      "http://localhost:5173",
+    ],
     credentials: true,
   }),
 );
