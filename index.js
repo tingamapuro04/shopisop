@@ -19,13 +19,15 @@ import { OrderItem } from './models/orderItem.js';
 const app = express();
 app.use(
   cors({
-    origin: [
-      "https://nunuabidhaa.netlify.app/",
-      "http://localhost:5173",
-    ],
+    origin: ["https://nunuabidhaa.netlify.app", "http://localhost:5173"],
     credentials: true,
+    methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
   }),
 );
+
+// Explicitly handle preflight for all routes
+app.options("*", cors());
+
 app.use(express.json());
 
 const limiter = rateLimit({
